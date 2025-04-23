@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>随机翻牌效果</title>
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <select id="card-count-select" class="card-count-select">
+                <option value="1-1">1张卡片</option>
+                <option value="2-2">2张卡片</option>
+                <option value="3-3">3张卡片</option>
+                <option value="4-2">4张卡片</option>
+                <option value="6-3">6张卡片</option>
+                <option value="9-3" selected>9张卡片</option>
+            </select>
+        </div>
+        <div id="card-container" class="card-container">
+            <!-- 卡片将通过JavaScript动态生成 -->
+        </div>
+    </div>
+
+    <script src="./js/config.js"></script>
+    <script src="./js/data-loader.js"></script>
+    <script src="./js/card.js"></script>
+    <script src="./js/main.js"></script>
+</body>
+</html>
