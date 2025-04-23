@@ -41,10 +41,11 @@ class Card {
         // 创建卡片正面
         const cardFront = document.createElement('div');
         cardFront.className = 'card-front';
-        const frontImg = document.createElement('img');
-        frontImg.src = CONFIG.assets.cardFront;
-        frontImg.alt = '卡片正面';
-        cardFront.appendChild(frontImg);
+        // 设置背景图片
+        cardFront.style.backgroundImage = `url('${CONFIG.assets.cardFront}')`;
+        cardFront.style.backgroundSize = 'cover'; // 或者 'contain', 根据需要调整
+        cardFront.style.backgroundPosition = 'center';
+        cardFront.style.backgroundRepeat = 'no-repeat';
         
         // 创建文本容器
         const textContainer = document.createElement('div');
@@ -72,6 +73,7 @@ class Card {
         }
         
         imageBox.appendChild(customImage);
+        // imageBox 包含了 customImage，将其添加到 cardFront
         cardFront.appendChild(imageBox);
         
         // 根据配置创建文本框
@@ -86,25 +88,28 @@ class Card {
             textBox.style.fontSize = boxConfig.fontSize;
             textBox.style.fontWeight = boxConfig.fontWeight;
             textBox.style.color = boxConfig.color;
-            
-            // 应用可见性和透明度设置
+            // Apply initial visibility based on config
             if (boxConfig.visible === false) {
                 textBox.style.display = 'none';
+            } else {
+                textBox.style.display = ''; // Or 'block'/'inline' depending on desired default
             }
             textBox.style.opacity = boxConfig.opacity;
-            
+
             // 如果有数据，则填充内容
-            if (this.dataGroup && this.dataGroup[index]) {
+            if (this.dataGroup && this.dataGroup[index] !== undefined) { // Check if data exists for this index
                 textBox.textContent = this.dataGroup[index];
             } else {
-                textBox.textContent = `文本 ${index + 1}`;
+                // Provide a default or leave empty if no data
+                // textBox.textContent = `文本 ${index + 1}`; // Example default
+                textBox.textContent = ''; // Or leave empty
             }
-            
-            textContainer.appendChild(textBox);
+
+            cardFront.appendChild(textBox); // Append the configured textBox to cardFront
         });
-        
-        cardFront.appendChild(textContainer);
-        
+        // Note: textContainer was defined but text boxes are added directly to cardFront.
+        // If textContainer is unused, its definition could be removed for clarity.
+
         // 组装卡片
         cardInner.appendChild(cardBack);
         cardInner.appendChild(cardFront);
@@ -148,6 +153,9 @@ class Card {
                 // 更新文本内容
                 if (this.dataGroup && this.dataGroup[index]) {
                     textBox.textContent = this.dataGroup[index];
+                } else {
+                    // Clear content if no data for this index
+                    textBox.textContent = ''; 
                 }
             }
         });

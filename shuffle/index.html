@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>洗牌翻牌效果</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .container {
+            display: flex;
+            flex-direction: column;
+            /* justify-content: center; Changed to align controls at top */
+            align-items: center;
+            height: 100vh;
+            padding: 20px;
+            position: relative; /* Needed for absolute positioning of cards */
+            overflow: hidden; /* Hide overflowing elements during animation */
+        }
+
+        .card-stack-container {
+            position: absolute; /* Change to absolute for precise positioning */
+            left: 50%; /* Center horizontally */
+            top: 50%; /* Center vertically */
+            transform: translate(-50%, -50%); /* Adjust for centering */
+            width: 300px; /* Increased width */
+            height: calc(300px * 5 / 9); /* Calculate height based on width and new aspect ratio */
+            cursor: pointer;
+            transition: transform 0.5s ease-in-out;
+            margin-bottom: 0; /* Remove margin as it's absolutely positioned */
+        }
+
+        .card-stack-container.moved-left {
+            /* Adjust translateX for symmetry, considering card width */
+            transform: translate(calc(-50% - 200px), -50%); /* Increased offset for larger card */
+        }
+
+        .card {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            aspect-ratio: 9 / 5; /* Changed aspect ratio */
+            background-size: cover;
+            background-position: center;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: opacity 0.5s ease-in-out; /* Only transition opacity, transform handled by inner */
+            /* transform-style moved to inner */
+        }
+
+        .card-inner {
+            position: relative; /* Contain absolute children */
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s ease-in-out; /* Transition for flip */
+            transform-style: preserve-3d;
+        }
+
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-back,
+        .card-front {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden; /* Hide back during flip */
+        }
+
+        .card-back {
+            background-image: url('../assets/card-back.png'); /* Default back */
+            background-size: cover; /* Ensure image covers the area */
+            background-position: center; /* Center the image */
+            z-index: 1;
+            transform: rotateY(0deg);
+        }
+
+        .card-front {
+            background-image: url('../assets/card-front.jpg'); /* Default front */
+            transform: rotateY(180deg);
+            z-index: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            box-sizing: border-box;
+            background-color: white; /* Front background */
+        }
+        
+        .card-front img {
+            width: 100%; /* Fill width */
+            height: 100%; /* Fill height */
+            object-fit: contain; /* Maintain aspect ratio */
+            max-height: 60%; /* Adjust max height slightly if needed */
+        }
+        
+        .card-front .title,
+        .card-front .description {
+            text-align: center;
+            font-size: 0.8em;
+            color: black;
+        }
+
+        .card.flipped .card-inner {
+            transform: rotateY(180deg); /* Rotate the inner container */
+        }
+        /* Removed .card.revealed class */
+
+        /* Styles for inner faces when flipped (redundant if parent rotates) */
+        /* .card.flipped .card-back { transform: rotateY(180deg); } */
+        /* .card.flipped .card-front { transform: rotateY(0deg); z-index: 2; } */
+
+        .revealed-card-container {
+            position: absolute;
+            left: 50%; /* Center horizontally */
+            top: 50%; /* Center vertically */
+            /* Adjust translateX for symmetry, considering card width */
+            transform: translate(calc(-50% + 200px), -50%); /* Increased offset for larger card */
+            width: 300px; /* Match stack width */
+            height: calc(300px * 5 / 9); /* Calculate height based on width and new aspect ratio */
+        }
+
+        .controls {
+            /* margin-bottom: 20px; Removed */
+            margin-top: 20px; /* Added margin top */
+            display: flex;
+            gap: 10px;
+            width: 100%; /* Make controls take full width */
+            justify-content: center; /* Center buttons within controls */
+            position: absolute; /* Position absolutely */
+            top: 0; /* Align to top */
+            left: 50%; /* Center horizontally */
+            transform: translateX(-50%); /* Adjust centering */
+            z-index: 10; /* Ensure controls are above cards */
+        }
+
+        .shuffle-button, .reset-button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .shuffle-button:hover, .reset-button:hover {
+            background-color: #45a049;
+        }
+        
+        /* Shuffle Animation Keyframes */
+        @keyframes shuffle-up {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0); }
+        }
+        @keyframes shuffle-down {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(20px); }
+            100% { transform: translateY(0); }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <button id="shuffle-button" class="shuffle-button">洗牌</button>
+            <button id="reset-button" class="reset-button">重置牌堆</button>
+        </div>
+        <div id="card-stack-container" class="card-stack-container">
+            <!-- Card stack will be generated here -->
+        </div>
+        <div id="revealed-card-container" class="revealed-card-container">
+            <!-- Revealed cards will be placed here -->
+        </div>
+    </div>
+
+    <audio id="shuffle-sound" src="../assets/洗牌.mp3" preload="auto"></audio>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/data-loader.js"></script>
+    <script src="../js/card.js"></script> <!-- Assuming Card class can be reused/adapted -->
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const cardStackContainer = document.getElementById('card-stack-container');
+            const revealedCardContainer = document.getElementById('revealed-card-container');
+            const shuffleButton = document.getElementById('shuffle-button');
+            const resetButton = document.getElementById('reset-button');
+            const shuffleSound = document.getElementById('shuffle-sound');
+            const cardCount = 10;
+            let cardsData = [];
+            let cardElements = [];
+            let revealedCards = [];
+            let isShuffling = false;
+            let currentCardIndex = 0;
+
+            // Adjust asset paths
+            const originalConfig = CONFIG;
+            CONFIG.assets = {
+                cardBack: '../' + originalConfig.assets.cardBack.replace('./', ''),
+                cardFront: '../' + originalConfig.assets.cardFront.replace('./', ''),
+                dataFile: '../' + originalConfig.assets.dataFile.replace('./', '')
+            };
+
+            const dataLoader = new DataLoader(CONFIG.assets.dataFile);
+            await dataLoader.loadData();
+
+            function createCardElement(index, data) {
+                const cardDiv = document.createElement('div');
+                cardDiv.classList.add('card');
+                cardDiv.dataset.index = index;
+                // Initial transform removed, will be applied dynamically
+                cardDiv.style.zIndex = cardCount - index; // Higher index cards are on top
+
+                const cardInner = document.createElement('div'); // Create inner container
+                cardInner.classList.add('card-inner');
+
+                const cardBack = document.createElement('div');
+                cardBack.classList.add('card-back');
+                cardBack.style.backgroundImage = `url(${CONFIG.assets.cardBack})`;
+
+                const cardFront = document.createElement('div');
+                cardFront.classList.add('card-front');
+                // Populate front with data
+                if (data) {
+                    const title = document.createElement('div');
+                    title.classList.add('title');
+                    title.textContent = data[0] || '';
+                    
+                    const img = document.createElement('img');
+                    // Adjust image path relative to shuffle/index.html
+                    const imagePath = data[3] ? '../' + data[3].replace('./', '') : CONFIG.assets.cardFront;
+                    img.src = imagePath;
+                    img.alt = data[0] || 'Card Image';
+
+                    const description = document.createElement('div');
+                    description.classList.add('description');
+                    description.textContent = data[1] || '';
+
+                    cardFront.appendChild(title);
+                    cardFront.appendChild(img);
+                    cardFront.appendChild(description);
+                } else {
+                     cardFront.style.backgroundImage = `url(${CONFIG.assets.cardFront})`; // Fallback
+                }
+
+                cardInner.appendChild(cardBack); // Append faces to inner container
+                cardInner.appendChild(cardFront);
+                cardDiv.appendChild(cardInner); // Append inner container to card
+                return cardDiv;
+            }
+
+            function initializeCardStack() {
+                cardStackContainer.innerHTML = '';
+                revealedCardContainer.innerHTML = '';
+                cardElements = [];
+                revealedCards = [];
+                currentCardIndex = 0;
+                cardStackContainer.classList.remove('moved-left');
+
+                // Get 10 random data entries
+                cardsData = [];
+                for (let k = 0; k < cardCount; k++) {
+                    cardsData.push(dataLoader.getRandomDataGroup());
+                }
+
+                for (let i = 0; i < cardCount; i++) {
+                    const cardElement = createCardElement(i, cardsData[i]);
+                    cardStackContainer.appendChild(cardElement);
+                    cardElements.push(cardElement);
+                }
+            }
+            
+            async function playShuffleSound() {
+                try {
+                    shuffleSound.currentTime = 0; // Rewind to start
+                    await shuffleSound.play();
+                } catch (error) {
+                    console.error("Error playing shuffle sound:", error);
+                }
+            }
+
+            async function shuffleAnimation() {
+                if (isShuffling) return;
+                isShuffling = true;
+                shuffleButton.disabled = true;
+                resetButton.disabled = true;
+                cardStackContainer.removeEventListener('click', revealCard);
+
+                const shufflePromises = [];
+
+                for (let k = 0; k < 3; k++) { // Shuffle 3 times
+                    playShuffleSound(); // Play sound concurrently
+                    const animationPromises = [];
+                    for (let i = 0; i < cardElements.length; i++) {
+                        const card = cardElements[i];
+                        const animationName = i % 2 === 0 ? 'shuffle-up' : 'shuffle-down';
+                        card.style.animation = `${animationName} 0.3s ease-in-out`;
+                        animationPromises.push(new Promise(resolve => card.onanimationend = () => {
+                            card.style.animation = ''; // Clear animation
+                            resolve();
+                        }));
+                    }
+                    await Promise.all(animationPromises);
+                    await new Promise(resolve => setTimeout(resolve, 50)); // Short pause between shuffles
+                }
+                
+                // Actual data shuffling (Fisher-Yates)
+                for (let i = cardsData.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [cardsData[i], cardsData[j]] = [cardsData[j], cardsData[i]];
+                }
+                
+                // Update card elements with new data (optional, could just use shuffled data index)
+                // For simplicity, we'll just use the shuffled cardsData array when revealing
+                console.log("Shuffling complete, data randomized.");
+
+                isShuffling = false;
+                shuffleButton.disabled = false;
+                resetButton.disabled = false;
+                cardStackContainer.addEventListener('click', revealCard);
+            }
+
+            function revealCard() {
+                if (isShuffling || currentCardIndex >= cardCount) return;
+
+                if (currentCardIndex === 0) {
+                    // Move stack to the left on the first click
+                    cardStackContainer.classList.add('moved-left');
+                }
+
+                const cardToReveal = cardElements[cardCount - 1 - currentCardIndex]; // Get top card from stack visual
+                const cardData = cardsData[currentCardIndex]; // Get corresponding shuffled data
+                
+                // Update the card element's front face with correct data before flipping
+                const frontFace = cardToReveal.querySelector('.card-front');
+                const title = frontFace.querySelector('.title');
+                const img = frontFace.querySelector('img');
+                const description = frontFace.querySelector('.description');
+                if(cardData) {
+                    title.textContent = cardData[0] || '';
+                    const imagePath = cardData[3] ? '../' + cardData[3].replace('./', '') : CONFIG.assets.cardFront;
+                    img.src = imagePath;
+                    img.alt = cardData[0] || 'Card Image';
+                    description.textContent = cardData[1] || '';
+                } // else keep default front
+
+                // Set z-index for stacking
+                cardToReveal.style.zIndex = revealedCards.length + 1;
+
+                // Set the final translate position for stacking
+                cardToReveal.style.transform = `translate(${revealedCards.length * 2}px, ${revealedCards.length * 1}px)`;
+
+                // Move card to revealed container
+                revealedCardContainer.appendChild(cardToReveal);
+
+                // Add flipped class to trigger the animation *after* moving
+                // Use a slight delay to ensure the element is rendered before applying the class
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => { // Double requestAnimationFrame for broader compatibility
+                         cardToReveal.classList.add('flipped');
+                    });
+                });
+                
+                revealedCards.push(cardToReveal);
+                currentCardIndex++;
+                
+                // Hide the original placeholder in the stack if needed (or just let it be covered)
+                // cardStackContainer.children[cardCount - 1 - currentCardIndex].style.opacity = 0; // Example
+            }
+
+            function resetCards() {
+                if (isShuffling) return;
+                console.log("Resetting cards...");
+                revealedCardContainer.innerHTML = ''; // Clear revealed cards
+                initializeCardStack(); // Re-create the initial stack
+                cardStackContainer.addEventListener('click', revealCard);
+            }
+
+            // Event Listeners
+            shuffleButton.addEventListener('click', shuffleAnimation);
+            resetButton.addEventListener('click', resetCards);
+            cardStackContainer.addEventListener('click', revealCard);
+
+            // Initial setup
+            initializeCardStack();
+            revealedCardContainer.addEventListener('click', (event) => {
+                console.log('Revealed container clicked. Target:', event.target);
+                // Only reset if the click is directly on the container, not a card inside?
+                // Or maybe reset regardless? Let's keep the original logic for now.
+                console.log('Attempting reset...');
+                resetCards();
+            }); // Add listener to reset revealed cards on click
+        });
+    </script>
+</body>
+</html>

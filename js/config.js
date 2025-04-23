@@ -66,7 +66,7 @@ const CONFIG = {
     
     // 资源文件路径
     assets: {
-        cardBack: './assets/精准破局卡.png',
+        cardBack: './assets/card-back.jpg',
         cardFront: './assets/牌面.png',
         dataFile: './data/card_data.csv'
     },

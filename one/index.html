@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>单卡片翻牌效果</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 20px;
+        }
+        
+        .card-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            width: 100%;
+            /* max-width: 300px; Removed to allow JS control */
+            height: auto;
+            aspect-ratio: 5/3; /* Maintain aspect ratio */
+            cursor: pointer;
+        }
+        
+        .controls {
+            margin-bottom: 20px;
+        }
+        
+        .refresh-button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .refresh-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+        </div>
+        <div id="card-container" class="card-container">
+            <!-- 卡片将通过JavaScript动态生成 -->
+        </div>
+    </div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/data-loader.js"></script>
+    <script src="../js/card.js"></script>
+    <script>
+        // 单卡片页面主程序
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 设置页面标题
+            document.title = "单卡片翻牌效果";
+
+            // 获取页面元素
+            const cardContainer = document.getElementById('card-container');
+            
+            // 修正资源路径，因为当前页面在子目录中
+            const originalConfig = CONFIG;
+            CONFIG.assets = {
+                cardBack: '../' + originalConfig.assets.cardBack.replace('./', ''),
+                cardFront: '../' + originalConfig.assets.cardFront.replace('./', ''),
+                dataFile: '../' + originalConfig.assets.dataFile.replace('./', '')
+            };
+            
+            // 创建数据加载器
+            const dataLoader = new DataLoader(CONFIG.assets.dataFile);
+            
+            // 加载数据
+            await dataLoader.loadData();
+            
+            // 存储当前卡片
+            let card;
+
+            // 创建单张卡片
+            function createSingleCard() {
+                // 清空现有卡片
+                cardContainer.innerHTML = '';
+
+                // 创建新卡片
+                const dataGroup = dataLoader.getRandomDataGroup();
+                
+                // Adjust image path for one/index.html context
+                if (dataGroup && dataGroup[3] && dataGroup[3].startsWith('./')) {
+                    dataGroup[3] = '../' + dataGroup[3].replace('./', '');
+                }
+
+                card = new Card(0, cardContainer);
+                card.setData(dataGroup);
+                card.create();
+
+                // 调整卡片大小
+                adjustCardSize();
+                
+                // 卡片类中已经添加了点击事件监听器，无需在此重复添加
+            }
+
+            // 响应式调整卡片大小
+            function adjustCardSize() {
+                const cardElement = document.querySelector('.card');
+                
+                if (cardElement) {
+                    // 让卡片宽度填充容器，CSS aspect-ratio 会自动调整高度
+                    // 容器本身有 max-width 限制
+                    cardElement.style.width = '100%'; 
+                    // 移除JS设置的高度，让CSS aspect-ratio生效
+                    cardElement.style.height = 'auto'; 
+                }
+            }
+
+            // 初始化卡片
+            createSingleCard();
+
+            // 窗口大小变化时调整布局
+            window.addEventListener('resize', adjustCardSize);
+            
+            // 添加刷新按钮事件
+            document.getElementById('refresh-button').addEventListener('click', createSingleCard);
+        });
+    </script>
+</body>
+</html>
