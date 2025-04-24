@@ -9,29 +9,31 @@
         .container {
             display: flex;
             flex-direction: column;
-            /* justify-content: center; Changed to align controls at top */
+            justify-content: flex-start; /* Align items to the top */
             align-items: center;
-            height: 100vh;
+            min-height: 100vh; /* Use min-height */
             padding: 20px;
-            position: relative; /* Needed for absolute positioning of cards */
+            /* position: relative; No longer needed for container positioning */
             overflow: hidden; /* Hide overflowing elements during animation */
         }
 
         .card-stack-container {
-            position: absolute; /* Change to absolute for precise positioning */
-            left: 50%; /* Center horizontally */
-            top: 50%; /* Center vertically */
-            transform: translate(-50%, -50%); /* Adjust for centering */
+            /* position: absolute; Removed */
+            /* left: 50%; Removed */
+            /* top: 35%; Removed */
+            /* transform: translate(-50%, -50%); Removed */
             width: 300px; /* Increased width */
             height: calc(300px * 5 / 9); /* Calculate height based on width and new aspect ratio */
             cursor: pointer;
             transition: transform 0.5s ease-in-out;
-            margin-bottom: 0; /* Remove margin as it's absolutely positioned */
+            margin-top: 50px; /* Add top margin for spacing */
+            margin-bottom: 20px;
+            position: relative; /* Needed for absolute positioning of cards inside */
         }
 
-        .card-stack-container.moved-left {
-            /* Adjust translateX for symmetry, considering card width */
-            transform: translate(calc(-50% - 200px), -50%); /* Increased offset for larger card */
+        .card-stack-container.moved-up {
+            /* Adjust translateY for symmetry */
+            transform: translateY(-80px); /* Move stack up - Reduced distance */
         }
 
         .card {
@@ -87,6 +89,14 @@
             box-sizing: border-box;
             background-color: white; /* Front background */
         }
+
+        .card-front img {
+            display: block; /* Remove extra space below image */
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Contain the image within bounds, no cropping */
+            border-radius: inherit; /* Inherit border-radius from parent */
+        }
         
         /* Removed specific .card-front img styles, handled by image-box in card.js */
         
@@ -106,27 +116,29 @@
         /* .card.flipped .card-back { transform: rotateY(180deg); } */
         /* .card.flipped .card-front { transform: rotateY(0deg); z-index: 2; } */
 
+
         .revealed-card-container {
-            position: absolute;
-            left: 50%; /* Center horizontally */
-            top: 50%; /* Center vertically */
-            /* Adjust translateX for symmetry, considering card width */
-            transform: translate(calc(-50% + 200px), -50%); /* Increased offset for larger card */
+            /* position: absolute; Removed */
+            /* left: 50%; Removed */
+            /* top: 55%; Removed */
+            /* transform: translateX(-50%); Removed */
             width: 300px; /* Match stack width */
-            height: calc(300px * 5 / 9); /* Calculate height based on width and new aspect ratio */
+            min-height: calc(300px * 5 / 9 + 20px); /* Provide minimum height for revealed cards area */
+            position: relative; /* Needed for absolute positioning of cards inside */
         }
 
         .controls {
-            /* margin-bottom: 20px; Removed */
-            margin-top: 20px; /* Added margin top */
+            margin-bottom: 20px; /* Add margin below controls */
+            /* margin-top: 20px; Removed */
             display: flex;
             gap: 10px;
             width: 100%; /* Make controls take full width */
             justify-content: center; /* Center buttons within controls */
-            position: absolute; /* Position absolutely */
-            top: 0; /* Align to top */
-            left: 50%; /* Center horizontally */
-            transform: translateX(-50%); /* Adjust centering */
+            /* position: absolute; Removed */
+            /* top: 0; Removed */
+            /* left: 50%; Removed */
+            /* transform: translateX(-50%); Removed */
+            position: relative; /* Ensure z-index works */
             z-index: 10; /* Ensure controls are above cards */
         }
 
@@ -253,7 +265,7 @@
                 cardElements = [];
                 revealedCards = [];
                 currentCardIndex = 0;
-                cardStackContainer.classList.remove('moved-left');
+                cardStackContainer.classList.remove('moved-up');
 
                 // Get 10 random data entries
                 cardsData = [];
@@ -322,8 +334,8 @@
                 if (isShuffling || currentCardIndex >= cardCount) return;
 
                 if (currentCardIndex === 0) {
-                    // Move stack to the left on the first click
-                    cardStackContainer.classList.add('moved-left');
+                    // Move stack up on the first click
+                    cardStackContainer.classList.add('moved-up');
                 }
 
                 const cardToReveal = cardElements[cardCount - 1 - currentCardIndex]; // Get top card from stack visual
@@ -345,8 +357,12 @@
                 // Set z-index for stacking
                 cardToReveal.style.zIndex = revealedCards.length + 1;
 
-                // Set the final translate position for stacking
-                cardToReveal.style.transform = `translate(${revealedCards.length * 2}px, ${revealedCards.length * 1}px)`;
+                // Set the final translate position for vertical stacking
+                // Apply vertical offset using transform: translateY
+                cardToReveal.style.transform = `translateY(${revealedCards.length * 20}px)`; // Use translateY for stacking
+                cardToReveal.style.top = ''; // Clear any explicit top positioning
+                // Optionally, add a slight horizontal offset for a fanned effect if desired:
+                // cardToReveal.style.transform = `translate(${revealedCards.length * 1}px, ${revealedCards.length * 20}px)`;
 
                 // Move card to revealed container
                 revealedCardContainer.appendChild(cardToReveal);
