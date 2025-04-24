@@ -79,21 +79,16 @@
             background-image: url('../assets/card-front.jpg'); /* Default front */
             transform: rotateY(180deg);
             z-index: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
+            /* Removed flex properties to allow absolute positioning from card.js */
+            position: relative; /* Ensure it's a positioning context for absolute children */
+            background-size: cover; /* Ensure background covers */
+            background-position: center;
+            background-repeat: no-repeat;
             box-sizing: border-box;
             background-color: white; /* Front background */
         }
         
-        .card-front img {
-            width: 100%; /* Fill width */
-            height: 100%; /* Fill height */
-            object-fit: contain; /* Maintain aspect ratio */
-            max-height: 60%; /* Adjust max height slightly if needed */
-        }
+        /* Removed specific .card-front img styles, handled by image-box in card.js */
         
         .card-front .title,
         .card-front .description {

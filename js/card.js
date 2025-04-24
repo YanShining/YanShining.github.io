@@ -58,8 +58,10 @@ class Card {
         imageBox.style.position = 'absolute';
         imageBox.style.top = CONFIG.imageBox.top;
         imageBox.style.left = CONFIG.imageBox.left;
+        imageBox.style.transform = 'translate(-50%, -50%)'; // 添加 transform 以居中
         imageBox.style.width = CONFIG.imageBox.width;
         imageBox.style.height = CONFIG.imageBox.height;
+        imageBox.style.zIndex = '0'; // 确保图片框在底层
         
         // 创建图片元素
         const customImage = document.createElement('img');
@@ -88,11 +90,12 @@ class Card {
             textBox.style.fontSize = boxConfig.fontSize;
             textBox.style.fontWeight = boxConfig.fontWeight;
             textBox.style.color = boxConfig.color;
-            // Apply initial visibility based on config
+            textBox.style.zIndex = '1'; // 确保文本框显示在图片框之上
+            // 正确应用可见性设置 - 使用visibility而不是display
             if (boxConfig.visible === false) {
-                textBox.style.display = 'none';
+                textBox.style.visibility = 'hidden';
             } else {
-                textBox.style.display = ''; // Or 'block'/'inline' depending on desired default
+                textBox.style.visibility = 'visible';
             }
             textBox.style.opacity = boxConfig.opacity;
 
@@ -142,13 +145,17 @@ class Card {
         CONFIG.textBoxes.forEach((boxConfig, index) => {
             const textBox = document.getElementById(`${this.id}-${boxConfig.id}`);
             if (textBox) {
-                // 应用可见性和透明度设置
+                // 应用可见性、透明度和层级设置
                 if (boxConfig.visible === false) {
-                    textBox.style.display = 'none';
+                    textBox.style.visibility = 'hidden';
                 } else {
-                    textBox.style.display = '';
+                    textBox.style.visibility = 'visible';
                 }
+                // 更新位置和样式
+                textBox.style.top = boxConfig.top;
+                textBox.style.left = boxConfig.left;
                 textBox.style.opacity = boxConfig.opacity;
+                textBox.style.zIndex = '1'; // 确保文本框显示在图片框之上
                 
                 // 更新文本内容
                 if (this.dataGroup && this.dataGroup[index]) {
@@ -162,10 +169,21 @@ class Card {
         
         // 更新图片框的内容
         const imageBox = document.getElementById(`${this.id}-${CONFIG.imageBox.id}`);
-        if (imageBox && this.dataGroup && this.dataGroup[3]) {
-            const customImage = imageBox.querySelector('img');
-            if (customImage) {
-                customImage.src = this.dataGroup[3];
+        if (imageBox) {
+            // 重新应用imageBox的配置
+            imageBox.style.top = CONFIG.imageBox.top;
+            imageBox.style.left = CONFIG.imageBox.left;
+            imageBox.style.transform = 'translate(-50%, -50%)'; // 添加 transform 以居中
+            imageBox.style.width = CONFIG.imageBox.width;
+            imageBox.style.height = CONFIG.imageBox.height;
+            imageBox.style.zIndex = '0';
+            
+            // 更新图片内容
+            if (this.dataGroup && this.dataGroup[3]) {
+                const customImage = imageBox.querySelector('img');
+                if (customImage) {
+                    customImage.src = this.dataGroup[3];
+                }
             }
         }
     }
