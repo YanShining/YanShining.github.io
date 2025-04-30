@@ -4,8 +4,10 @@ class Card {
         this.id = id;
         this.container = container;
         this.element = null;
-        this.isFlipped = false;
+        // this.isFlipped = false; // Replaced with state
+        this.state = 'back'; // 'back', 'front', 'fullscreen'
         this.dataGroup = null;
+        this.fullscreenOverlay = null; // To hold the fullscreen element
     }
 
     // 设置卡片数据
@@ -71,7 +73,9 @@ class Card {
         
         // 如果有数据，则设置图片路径
         if (this.dataGroup && this.dataGroup[3]) {
-            customImage.src = this.dataGroup[3];
+            // Use the base path from config + filename from data
+            const imagePath = CONFIG.assets.cardFaceBasePath + this.dataGroup[3];
+            customImage.src = imagePath; 
         }
         
         imageBox.appendChild(customImage);
@@ -119,26 +123,82 @@ class Card {
         this.element.appendChild(cardInner);
         
         // 添加点击事件
-        this.element.addEventListener('click', () => this.flip());
-        
+        // this.element.addEventListener('click', () => this.flip()); // Replaced with handleClick
+        this.element.addEventListener('click', () => this.handleClick());
+
         // 将卡片添加到容器
         this.container.appendChild(this.element);
-        
+
         return this;
     }
 
-    // 翻转卡片
-    flip() {
-        this.isFlipped = !this.isFlipped;
-        if (this.isFlipped) {
-            this.element.classList.add('flipped');
-        } else {
-            this.element.classList.remove('flipped');
+    // // 翻转卡片 (Old flip method)
+    // flip() {
+    //     this.isFlipped = !this.isFlipped;
+    //     if (this.isFlipped) {
+    //         this.element.classList.add('flipped');
+    //     } else {
+    //         this.element.classList.remove('flipped');
+    //     }
+    // }
+
+    // 新的点击处理逻辑
+    handleClick() {
+        switch (this.state) {
+            case 'back':
+                this.element.classList.add('flipped');
+                this.state = 'front';
+                break;
+            case 'front':
+                this.showFullscreen();
+                this.state = 'fullscreen';
+                break;
+            case 'fullscreen':
+                this.closeFullscreen();
+                this.state = 'front'; // Stay on front after closing fullscreen
+                break;
+        }
+    }
+
+    // 显示全屏
+    showFullscreen() {
+        if (!this.dataGroup || !this.dataGroup[3]) return; // No image data
+
+        // 创建覆盖层
+        this.fullscreenOverlay = document.createElement('div');
+        this.fullscreenOverlay.className = 'fullscreen-overlay';
+        this.fullscreenOverlay.addEventListener('click', () => this.closeFullscreen());
+
+        // 创建图片元素
+        const fullscreenImage = document.createElement('img');
+        const imagePath = CONFIG.assets.cardFaceBasePath + this.dataGroup[3];
+        fullscreenImage.src = imagePath;
+        fullscreenImage.alt = '全屏卡片正面';
+        fullscreenImage.className = 'fullscreen-image';
+
+        this.fullscreenOverlay.appendChild(fullscreenImage);
+        document.body.appendChild(this.fullscreenOverlay);
+    }
+
+    // 关闭全屏
+    closeFullscreen() {
+        if (this.fullscreenOverlay) {
+            document.body.removeChild(this.fullscreenOverlay);
+            this.fullscreenOverlay = null;
+            this.state = 'front'; // Ensure state is correct after closing
         }
     }
 
     // 更新卡片内容
     updateContent(dataGroup) {
+        // Reset state when content updates
+        if (this.state !== 'back') {
+            this.element.classList.remove('flipped');
+            this.closeFullscreen(); // Close fullscreen if open
+            this.state = 'back';
+        }
+        // this.isFlipped = false; // Remove isFlipped usage
+
         this.dataGroup = dataGroup;
         
         // 更新各个文本框的内容
@@ -182,7 +242,9 @@ class Card {
             if (this.dataGroup && this.dataGroup[3]) {
                 const customImage = imageBox.querySelector('img');
                 if (customImage) {
-                    customImage.src = this.dataGroup[3];
+                    // Use the base path from config + filename from data
+                    const imagePath = CONFIG.assets.cardFaceBasePath + this.dataGroup[3];
+                    customImage.src = imagePath; 
                 }
             }
         }

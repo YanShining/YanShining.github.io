@@ -14,8 +14,10 @@ const CONFIG = {
     
     // 卡片样式配置
     cardStyle: {
-        width: 250,
-        height: 150
+        width: 250, // 默认宽度，当 fitDimension 为 'height' 时可能被覆盖
+        height: 150, // 默认高度，当 fitDimension 为 'width' 时可能被覆盖
+        aspectRatio: 250 / 150, // 卡片宽高比 (width / height)
+        fitDimension: 'height' // 优先适应的维度: 'width' 或 'height'
     },
     
     // 字符框体配置
@@ -66,10 +68,15 @@ const CONFIG = {
     
     // 资源文件路径
     assets: {
-        cardBack: './assets/card-back.jpg',
+        cardBack: './assets/精准破局卡.png',
         cardFront: './assets/牌面.png',
+        cardFaceBasePath: './assets/', // 新增：牌面图片基础路径
         dataFile: './data/card_data.csv'
     },
+
+    // 验证码配置
+    enableVerification: false, // 是否启用验证码功能
+    verificationSalt: 'quanxiyouyi', // 用于生成验证码的盐值
 
     // 数据抽取配置
     dataOptions: {

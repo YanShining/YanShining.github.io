@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>随机翻牌效果</title>
-    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
     <div class="container">
@@ -23,11 +23,21 @@
         </div>
     </div>
 
-    <script src="./js/config.js"></script>
-    <script src="./js/data-loader.js"></script>
-    <script src="./js/card.js"></script>
-    <script src="./js/main.js"></script>
-    <script src="./js/verification.js"></script>
+    <script src="../js/config.js"></script>
+    <script>
+        // 修正资源路径，因为当前页面在子目录中
+        if (typeof CONFIG !== 'undefined' && CONFIG.assets) {
+            CONFIG.assets.cardBack = '../' + (CONFIG.assets.cardBack || '').replace(/^\.\//, '');
+            CONFIG.assets.cardFront = '../' + (CONFIG.assets.cardFront || '').replace(/^\.\//, '');
+            CONFIG.assets.cardFaceBasePath = '../assets/'; // 直接设置正确的相对路径
+            // 如果 dataFile 也需要调整，取消下一行的注释
+            CONFIG.assets.dataFile = '../' + (CONFIG.assets.dataFile || '').replace(/^\.\//, '');
+        }
+    </script>
+    <script src="../js/data-loader.js"></script>
+    <script src="../js/card.js"></script>
+    <script src="../js/main.js"></script>
+    <script src="../js/verification.js"></script>
     <script>
         // Ensure CONFIG is loaded and then run verification check
         document.addEventListener('DOMContentLoaded', () => {

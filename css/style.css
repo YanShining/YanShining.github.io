@@ -35,10 +35,15 @@ body {
 }
 
 .card-container {
-    display: grid;
-    justify-content: center;
-    gap: 20px;
+    position: relative;
+    display: grid; /* 恢复为 Grid 布局 */
+    gap: var(--card-gap, 20px);
+    padding: 20px;
     width: 100%;
+    max-width: 1200px;
+    margin: 20px auto;
+    box-sizing: border-box;
+    min-height: calc(100vh - 100px);
 }
 
 .card {
@@ -121,4 +126,28 @@ body {
     border-radius: 5px;
     text-align: center;
     margin-bottom: 10px;
+}
+
+/* 全屏覆盖层样式 */
+.fullscreen-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85); /* 半透明黑色背景 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* 确保在最顶层 */
+    cursor: pointer; /* 提示用户可以点击关闭 */
+}
+
+/* 全屏图片样式 */
+.fullscreen-image {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain; /* 保持图片比例 */
+    border-radius: 5px; /* 可选：轻微圆角 */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); /* 可选：添加阴影 */
 }

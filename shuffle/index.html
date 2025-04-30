@@ -168,6 +168,28 @@
             100% { transform: translateY(0); }
         }
 
+        /* Fullscreen Overlay Styles */
+        .fullscreen-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            cursor: pointer;
+        }
+
+        .fullscreen-image {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
     </style>
 </head>
 <body>
@@ -237,10 +259,10 @@
                     title.textContent = data[0] || '';
                     
                     const img = document.createElement('img');
-                    // Adjust image path relative to shuffle/index.html
-                    const imagePath = data[3] ? '../' + data[3].replace('./', '') : CONFIG.assets.cardFront;
-                    img.src = imagePath;
-                    img.alt = data[0] || 'Card Image';
+                    // Adjust image path relative to shuffle/index.html - MOVED TO revealCard
+                    // const imagePath = data[3] ? '../' + data[3].replace('./', '') : CONFIG.assets.cardFront;
+                    // img.src = imagePath; // Set in revealCard
+                    img.alt = data[0] || 'Card Image'; // Set alt text
 
                     const description = document.createElement('div');
                     description.classList.add('description');
@@ -301,8 +323,9 @@
                 for (let k = 0; k < 3; k++) { // Shuffle 3 times
                     playShuffleSound(); // Play sound concurrently
                     const animationPromises = [];
-                    for (let i = 0; i < cardElements.length; i++) {
-                        const card = cardElements[i];
+                    const cardsInStack = cardStackContainer.querySelectorAll('.card'); // Select only cards in the stack
+                    for (let i = 0; i < cardsInStack.length; i++) {
+                        const card = cardsInStack[i];
                         const animationName = i % 2 === 0 ? 'shuffle-up' : 'shuffle-down';
                         card.style.animation = `${animationName} 0.3s ease-in-out`;
                         animationPromises.push(new Promise(resolve => card.onanimationend = () => {
@@ -330,6 +353,29 @@
                 cardStackContainer.addEventListener('click', revealCard);
             }
 
+            function showFullscreenImage(imageUrl) {
+                // Remove existing overlay if any
+                const existingOverlay = document.getElementById('fullscreen-overlay');
+                if (existingOverlay) {
+                    existingOverlay.remove();
+                }
+
+                const overlay = document.createElement('div');
+                overlay.id = 'fullscreen-overlay';
+                overlay.classList.add('fullscreen-overlay');
+
+                const img = document.createElement('img');
+                img.src = imageUrl;
+                img.classList.add('fullscreen-image');
+
+                overlay.appendChild(img);
+                overlay.addEventListener('click', () => {
+                    overlay.remove();
+                });
+
+                document.body.appendChild(overlay);
+            }
+
             function revealCard() {
                 if (isShuffling || currentCardIndex >= cardCount) return;
 
@@ -348,11 +394,34 @@
                 const description = frontFace.querySelector('.description');
                 if(cardData) {
                     title.textContent = cardData[0] || '';
-                    const imagePath = cardData[3] ? '../' + cardData[3].replace('./', '') : CONFIG.assets.cardFront;
-                    img.src = imagePath;
+                    let finalImagePath = CONFIG.assets.cardFront; // Default fallback
+
+                    if (cardData[3]) {
+                        let csvPath = cardData[3].trim(); // Trim whitespace
+                        // Check if it's likely just a filename (no slashes)
+                        if (!csvPath.includes('/') && !csvPath.includes('\\')) {
+                            // Assume it belongs in the assets directory relative to root
+                            finalImagePath = '../assets/' + csvPath;
+                        } else {
+                            // Assume it's a path relative to root (e.g., assets/img.png or ./assets/img.png)
+                            // Remove leading ./ if present
+                            let relativePath = csvPath.replace(/^\.\//, '');
+                            finalImagePath = '../' + relativePath;
+                        }
+                    }
+
+                    console.log(`Card ${currentCardIndex}: Setting image src to: ${finalImagePath} (from CSV: ${cardData[3]})`); // Log details
+                    img.src = finalImagePath;
                     img.alt = cardData[0] || 'Card Image';
                     description.textContent = cardData[1] || '';
-                } // else keep default front
+                } else {
+                     // Fallback if no cardData (shouldn't happen with current logic)
+                     title.textContent = '';
+                     console.log("Setting image src to fallback:", CONFIG.assets.cardFront); // Add logging
+                     img.src = CONFIG.assets.cardFront;
+                     img.alt = 'Card Image';
+                     description.textContent = '';
+                }
 
                 // Set z-index for stacking
                 cardToReveal.style.zIndex = revealedCards.length + 1;
@@ -377,6 +446,15 @@
                 
                 revealedCards.push(cardToReveal);
                 currentCardIndex++;
+
+                // Add click listener for fullscreen view AFTER it's revealed
+                cardToReveal.addEventListener('click', (event) => {
+                    event.stopPropagation(); // Prevent container reset click
+                    const frontImg = cardToReveal.querySelector('.card-front img');
+                    if (frontImg && frontImg.src) {
+                        showFullscreenImage(frontImg.src);
+                    }
+                });
                 
                 // Hide the original placeholder in the stack if needed (or just let it be covered)
                 // cardStackContainer.children[cardCount - 1 - currentCardIndex].style.opacity = 0; // Example
@@ -385,6 +463,11 @@
             function resetCards() {
                 if (isShuffling) return;
                 console.log("Resetting cards...");
+                // Remove fullscreen overlay if present
+                const existingOverlay = document.getElementById('fullscreen-overlay');
+                if (existingOverlay) {
+                    existingOverlay.remove();
+                }
                 revealedCardContainer.innerHTML = ''; // Clear revealed cards
                 initializeCardStack(); // Re-create the initial stack
                 cardStackContainer.addEventListener('click', revealCard);
@@ -398,12 +481,27 @@
             // Initial setup
             initializeCardStack();
             revealedCardContainer.addEventListener('click', (event) => {
-                console.log('Revealed container clicked. Target:', event.target);
-                // Only reset if the click is directly on the container, not a card inside?
-                // Or maybe reset regardless? Let's keep the original logic for now.
-                console.log('Attempting reset...');
-                resetCards();
-            }); // Add listener to reset revealed cards on click
+                // Only reset if the click is directly on the container itself,
+                // not on a card within it.
+                if (event.target === revealedCardContainer) {
+                    console.log('Revealed container background clicked. Attempting reset...');
+                    resetCards();
+                } else {
+                    console.log('Revealed container clicked, but target was a child (likely a card). No reset.');
+                }
+            });
+        });
+    </script>
+    <script src="../js/verification.js"></script>
+    <script>
+        // Ensure CONFIG is loaded and then run verification check
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if CONFIG is defined before proceeding
+            if (typeof CONFIG !== 'undefined') {
+                checkVerification();
+            } else {
+                console.error('CONFIG object not found. Verification cannot proceed.');
+            }
         });
     </script>
 </body>

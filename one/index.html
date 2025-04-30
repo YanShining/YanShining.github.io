@@ -77,11 +77,12 @@
             CONFIG.assets = {
                 cardBack: '../' + originalConfig.assets.cardBack.replace('./', ''),
                 cardFront: '../' + originalConfig.assets.cardFront.replace('./', ''),
-                dataFile: '../' + originalConfig.assets.dataFile.replace('./', '')
+                dataFile: '../' + originalConfig.assets.dataFile.replace('./', ''),
+                cardFaceBasePath: '../assets/' // 添加此行以修正图片基础路径
             };
             
             // 创建数据加载器
-            const dataLoader = new DataLoader(CONFIG.assets.dataFile);
+            const dataLoader = new DataLoader(); // 不再需要文件路径参数
             
             // 加载数据
             await dataLoader.loadData();
@@ -133,6 +134,18 @@
             
             // 添加刷新按钮事件
             document.getElementById('refresh-button').addEventListener('click', createSingleCard);
+        });
+    </script>
+    <script src="../js/verification.js"></script>
+    <script>
+        // Ensure CONFIG is loaded and then run verification check
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if CONFIG is defined before proceeding
+            if (typeof CONFIG !== 'undefined') {
+                checkVerification();
+            } else {
+                console.error('CONFIG object not found. Verification cannot proceed.');
+            }
         });
     </script>
 </body>
