@@ -16,7 +16,7 @@ const CONFIG = {
     cardStyle: {
         width: 250, // 默认宽度，当 fitDimension 为 'height' 时可能被覆盖
         height: 150, // 默认高度，当 fitDimension 为 'width' 时可能被覆盖
-        aspectRatio: 250 / 150, // 卡片宽高比 (width / height)
+        aspectRatio: 250 / 1050, // 卡片宽高比 (width / height)
         fitDimension: 'height' // 优先适应的维度: 'width' 或 'height'
     },
     
