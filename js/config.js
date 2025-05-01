@@ -16,7 +16,7 @@ const CONFIG = {
     cardStyle: {
         width: 250, // 默认宽度，当 fitDimension 为 'height' 时可能被覆盖
         height: 150, // 默认高度，当 fitDimension 为 'width' 时可能被覆盖
-        aspectRatio: 250 / 1050, // 卡片宽高比 (width / height)
+        aspectRatio: 250 / 150, // 卡片宽高比 (width / height)
         fitDimension: 'height' // 优先适应的维度: 'width' 或 'height'
     },
     
@@ -75,7 +75,7 @@ const CONFIG = {
     },
 
     // 验证码配置
-    enableVerification: false, // 是否启用验证码功能
+    enableVerification: true, // 是否启用验证码功能
     verificationSalt: 'quanxiyouyi', // 用于生成验证码的盐值
 
     // 数据抽取配置
